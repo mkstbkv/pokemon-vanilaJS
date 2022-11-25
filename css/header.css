@@ -1,5 +1,5 @@
 .header {
-    background: #E8E8E9;
+    background: #ef5350;
 }
 
 .toolbar {
@@ -10,12 +10,11 @@
 }
 
 .logo {
-    font-size: 29px;
-    font-weight: 900;
-    line-height: 40px;
-    color: #000;
-    text-decoration: none;
     margin: auto 0;
+}
+
+.logo img {
+    width: 105px;
 }
 
 .nav {

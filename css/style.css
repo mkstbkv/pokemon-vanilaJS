@@ -10,10 +10,11 @@ img {
 }
 
 body {
-    font-family: "Times New Roman", Times, serif;
+    font-family: 'Nunito', sans-serif;
     color: #181818;
     font-size: 14px;
     margin: 0;
+    background: #F6F6F6;
 }
 
 .container {
