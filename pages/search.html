@@ -39,13 +39,22 @@
 
                     <label for="sortSelect"> Сортировка
                         <select id="sortSelect" name="sortSelect">
-                            <option value="a-z">A-Z</option>
-                            <option value="z-a">Z-A</option>
+                            <option value="name">По имени</option>
+                            <option value="height">По росту</option>
+                            <option value="weight">По весу</option>
+                            <option value="type">По типу</option>
+                        </select>
+                    </label>
+
+                    <label for="orderSelect"> Порядок
+                        <select id="orderSelect" name="orderSelect" >
+                            <option value="increase">По возрастанию</option>
+                            <option value="decrease">По убыванию</option>
                         </select>
                     </label>
 
                     <label for="inputNumber">На одной странице
-                        <input type="number" id="inputNumber" name="inputNumber" required max="20" min="50" value=10
+                        <input type="number" id="inputNumber" name="inputNumber" required max="20" min="5" value=10
                         />
                     </label>
                     <button type="submit" id="formBtn">Найти</button>
