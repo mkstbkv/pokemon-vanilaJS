@@ -35,18 +35,46 @@ document.addEventListener('DOMContentLoaded', () => {
         for ( i = 0, r = ""; i < arr.length; i++ ) {
             const getPokemonInfo = await fetchData(url + arr[i].name);
             const types = getPokemonInfo.types.map(t => t.type.name);
-
-            r += `
-                <div class="result-card">
-                    <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
-                    <p>${ getPokemonInfo.name }</p>
-                    <p>Рост: ${ getPokemonInfo.height }</p>
-                    <p>Вес: ${ getPokemonInfo.weight }</p>
-                    <p>Тип: ${ types.join(', ') }</p>
-                    <button>Добавить в избранное</button>
-                    <a href="../pages/pokemon-info.html" id="pokemon-info">More info</a>  
-                </div>
-            `;
+            const favorites = JSON.parse(localStorage.getItem('favorites'));
+            if (favorites) {
+                if (favorites.includes(getPokemonInfo.name)) {
+                    r += `
+                        <div class="result-card">
+                            <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
+                            <p>${ getPokemonInfo.name }</p>
+                            <p>Рост: ${ getPokemonInfo.height }</p>
+                            <p>Вес: ${ getPokemonInfo.weight }</p>
+                            <p>Тип: ${ types.join(', ') }</p>
+                            <button class="btnAddToFavorite ${ getPokemonInfo.name }">Удалить из ибранного</button>
+                            <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>  
+                        </div>
+                    `;
+                } else {
+                    r += `
+                        <div class="result-card">
+                            <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
+                            <p>${ getPokemonInfo.name }</p>
+                            <p>Рост: ${ getPokemonInfo.height }</p>
+                            <p>Вес: ${ getPokemonInfo.weight }</p>
+                            <p>Тип: ${ types.join(', ') }</p>
+                            <button class="btnAddToFavorite ${ getPokemonInfo.name }">Добавить в избранное</button>
+                            <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>  
+                        </div>
+                    `;
+                }
+            } else {
+                r += `
+                    <div class="result-card">
+                        <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
+                        <p>${ getPokemonInfo.name }</p>
+                        <p>Рост: ${ getPokemonInfo.height }</p>
+                        <p>Вес: ${ getPokemonInfo.weight }</p>
+                        <p>Тип: ${ types.join(', ') }</p>
+                        <button class="btnAddToFavorite ${ getPokemonInfo.name }">Добавить в избранное</button>
+                        <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>
+                    </div>
+                `;
+            }
         }
         return r;
     }
@@ -82,10 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const submit = async (input, sort, order,) => {
         let pokemonData = [];
-
         if (!(input === '')) {
             data.results.forEach( pokemon => {
-                if (pokemon.name.includes(input)) {
+                if (pokemon.name.includes(input.toLowerCase())) {
                     newData.push(pokemon);
                 }
             });
@@ -109,10 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const run = async () => {
+        const loader = document.getElementById('preloader');
+        loader.style.display = 'block';
         data = await fetchData(url + '?limit=100000&offset=0');
         await searchPagination(data.results);
+        loader.style.display = 'none';
 
-        document.addEventListener('click', async function (event){
+        document.addEventListener('click',async function (event){
+            loader.style.display = 'block';
             if ([...event.target.classList].includes("pagination-button")) {
                 addClassActive(event.target);
                 const y = event.target.textContent;
@@ -120,7 +151,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 const end = limit * y;
                 resultsBlock.innerHTML = await paintResult(data.results.slice(start, end));
             }
+            loader.style.display = 'none';
         });
+
+        document.addEventListener('click',function (event){
+            if ([...event.target.classList].includes("btnAddToFavorite")) {
+                let favorites = JSON.parse(localStorage.getItem('favorites'));
+                if (favorites) {
+                    if (!favorites.includes(event.target.classList[1])) {
+                        favorites.push(event.target.classList[1]);
+                        localStorage.setItem('favorites', JSON.stringify(favorites));
+                        event.target.innerText = 'Удалить из ибранного';
+                    } else {
+                        favorites.splice(favorites.indexOf(event.target.classList[1]), 1);
+                        localStorage.setItem('favorites', JSON.stringify(favorites));
+                        event.target.innerText = 'Добавить в избранное';
+
+                    }
+                } else {
+                    const fav = [];
+                    fav.push(event.target.classList[1]);
+                    localStorage.setItem('favorites', JSON.stringify(fav));
+                    event.target.innerText = 'Удалить из ибранного';
+                }
+            }
+        });
+
 
         form.addEventListener('submit', async e => {
             e.preventDefault();
@@ -130,8 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             newData = [];
             limit = inputNumber.value;
+            loader.style.display = 'block';
             await submit(inputText.value, sortSelect.value, orderSelect.value);
             await searchPagination(data.results);
+            loader.style.display = 'none';
         });
     };
 
