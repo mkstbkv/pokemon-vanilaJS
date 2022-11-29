@@ -1,61 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const url = 'https://pokeapi.co/api/v2/pokemon/';
     let favorites = JSON.parse(localStorage.getItem('favorites'));
+    let pokemons = JSON.parse(localStorage.getItem('pokemons'));
     const resultsBlock = document.getElementById('result-block');
     const loader = document.getElementById('preloader');
 
-    const fetchData = async url => {
-        const response = await fetch(url);
-        if (response.ok) {
-            return await response.json();
-        } else {
-            console.log('Что то пошло не так. Ошибка: ' + response.status);
-        }
-    };
-
-    async function paintResult (arr) {
+    function paintResult (arr) {
         for ( i = 0, r = ""; i < arr.length; i++ ) {
-            const getPokemonInfo = await fetchData(url + arr[i]);
-            const types = getPokemonInfo.types.map(t => t.type.name);
+            let pokemon = null;
+            pokemons.forEach(pok => {
+                if (pok.name === arr[i]) {
+                    pokemon = pok;
+                }
+            });
             const favoritesPok = JSON.parse(localStorage.getItem('favorites'));
             if (favoritesPok) {
-                if (favoritesPok.includes(getPokemonInfo.name)) {
+                if (favoritesPok.includes(pokemon.name)) {
                     r += `
                         <div class="result-card">
-                            <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
-                            <p>${ getPokemonInfo.name }</p>
-                            <p>Рост: ${ getPokemonInfo.height }</p>
-                            <p>Вес: ${ getPokemonInfo.weight }</p>
-                            <p>Тип: ${ types.join(', ') }</p>
-                            <button class="btnAddToFavorite ${ getPokemonInfo.name }">Удалить из ибранного</button>
-                            <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>  
-                        </div>
-                    `;
-                } else {
-                    r += `
-                        <div class="result-card">
-                            <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
-                            <p>${ getPokemonInfo.name }</p>
-                            <p>Рост: ${ getPokemonInfo.height }</p>
-                            <p>Вес: ${ getPokemonInfo.weight }</p>
-                            <p>Тип: ${ types.join(', ') }</p>
-                            <button class="btnAddToFavorite ${ getPokemonInfo.name }">Добавить в избранное</button>
-                            <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>  
+                            <img src="${  pokemon.img ? pokemon.img : `../images/no-image.png`} " alt="${  pokemon.name }"/>
+                            <p>${  pokemon.name }</p>
+                            <p>Рост: ${  pokemon.height }</p>
+                            <p>Вес: ${  pokemon.weight }</p>
+                            <p>Тип: ${ pokemon.types.type_1 }</p>
+                            <button class="btnAddToFavorite ${  pokemon.name }">Удалить из избранного</button>
+                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  pokemon.name }">More info</a>  
                         </div>
                     `;
                 }
-            } else {
-                r += `
-                    <div class="result-card">
-                        <img src="${ getPokemonInfo['sprites']['front_default'] }" alt="${ getPokemonInfo.name }"/>
-                        <p>${ getPokemonInfo.name }</p>
-                        <p>Рост: ${ getPokemonInfo.height }</p>
-                        <p>Вес: ${ getPokemonInfo.weight }</p>
-                        <p>Тип: ${ types.join(', ') }</p>
-                        <button class="btnAddToFavorite ${ getPokemonInfo.name }">Добавить в избранное</button>
-                        <a href="../pages/pokemon-info.html" class="pokemon-info ${ getPokemonInfo.name }">More info</a>
-                    </div>
-                `;
             }
         }
         return r;
@@ -65,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const run = async () => {
         if (favorites && favorites.length > 0) {
             loader.style.display = 'block';
-            resultsBlock.innerHTML = await paintResult(favorites);
+            resultsBlock.innerHTML = paintResult(favorites);
             loader.style.display = 'none';
         }
 
@@ -76,23 +47,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!favoritesPok.includes(event.target.classList[1])) {
                         favoritesPok.push(event.target.classList[1]);
                         localStorage.setItem('favorites', JSON.stringify(favoritesPok));
-                        event.target.innerText = 'Удалить из ибранного';
+                        event.target.innerText = 'Удалить из избранного';
 
                     } else {
                         favoritesPok.splice(favoritesPok.indexOf(event.target.classList[1]), 1);
                         localStorage.setItem('favorites', JSON.stringify(favoritesPok));
                         event.target.innerText = 'Добавить в избранное';
-
                     }
-                } else {
-                    const fav = [];
-                    fav.push(event.target.classList[1]);
-                    localStorage.setItem('favorites', JSON.stringify(fav));
-                    event.target.innerText = 'Удалить из ибранного';
                 }
             }
             let favoritesPok = JSON.parse(localStorage.getItem('favorites'));
-            resultsBlock.innerHTML = await paintResult(favoritesPok);
+            resultsBlock.innerHTML = paintResult(favoritesPok);
+        });
+
+        document.addEventListener('click',function (event){
+            if ([...event.target.classList].includes("pokemon-info")) {
+                let pokemon = event.target.classList[1];
+                localStorage.setItem('pokemon', pokemon);
+            }
         });
     };
     run();

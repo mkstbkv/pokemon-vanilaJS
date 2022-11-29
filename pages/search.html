@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/header.css">
     <link rel="stylesheet" href="../css/search.css">
-    <script src="../js/search.js"></script>
+    <script defer src="../js/search.js"></script>
 </head>
 <body>
     <header>
@@ -37,12 +37,35 @@
                         <input type="text" id="inputText" name="inputText"/>
                     </label>
 
+                    <label for="orderSelect"> Тип
+                        <select id="typeSelect" name="typeSelect" >
+                            <option value="normal">normal</option>
+                            <option value="fighting">fighting</option>
+                            <option value="flying">flying</option>
+                            <option value="poison">poison</option>
+                            <option value="ground">ground</option>
+                            <option value="rock">rock</option>
+                            <option value="bug">bug</option>
+                            <option value="ghost">ghost</option>
+                            <option value="steel">steel</option>
+                            <option value="fire">fire</option>
+                            <option value="water">water</option>
+                            <option value="grass">grass</option>
+                            <option value="electric">electric</option>
+                            <option value="psychic">psychic</option>
+                            <option value="ice">ice</option>
+                            <option value="dragon">dragon</option>
+                            <option value="dark">dark</option>
+                            <option value="fairy">fairy</option>
+                            <option value="shadow">shadow</option>
+                        </select>
+                    </label>
+
                     <label for="sortSelect"> Сортировка
                         <select id="sortSelect" name="sortSelect">
                             <option value="name">По имени</option>
                             <option value="height">По росту</option>
                             <option value="weight">По весу</option>
-                            <option value="type">По типу</option>
                         </select>
                     </label>
 
@@ -52,6 +75,7 @@
                             <option value="decrease">По убыванию</option>
                         </select>
                     </label>
+
 
                     <label for="inputNumber">На одной странице
                         <input type="number" id="inputNumber" name="inputNumber" required max="20" min="5" value=10
