@@ -31,58 +31,29 @@
     <main>
         <div class="container">
             <div class="search-block">
-                <form id="form">
+                <div class="text-field">
+                    <label class="text-field-label" for="inputText">Поиск по имени покемона</label>
+                    <div class="text-field-group">
+                        <input class="text-field-input" type="text" id="inputText" name="inputText">
+                        <button id="text-field-btn" type="button">Найти</button>
+                    </div>
+                </div>
 
-                    <label for="inputText">Поиск по имени
-                        <input type="text" id="inputText" name="inputText"/>
-                    </label>
+                <label for="inputNumber">На одной странице
+                    <div class="number">
+                        <button id="number-minus" type="button">-</button>
+                        <input id="inputNumber" type="number" min="5" max="20" value="10" step="5" readonly/>
+                        <button id="number-plus" type="button">+</button>
+                    </div>
+                </label>
 
-                    <label for="orderSelect"> Тип
-                        <select id="typeSelect" name="typeSelect" >
-                            <option value="normal">normal</option>
-                            <option value="fighting">fighting</option>
-                            <option value="flying">flying</option>
-                            <option value="poison">poison</option>
-                            <option value="ground">ground</option>
-                            <option value="rock">rock</option>
-                            <option value="bug">bug</option>
-                            <option value="ghost">ghost</option>
-                            <option value="steel">steel</option>
-                            <option value="fire">fire</option>
-                            <option value="water">water</option>
-                            <option value="grass">grass</option>
-                            <option value="electric">electric</option>
-                            <option value="psychic">psychic</option>
-                            <option value="ice">ice</option>
-                            <option value="dragon">dragon</option>
-                            <option value="dark">dark</option>
-                            <option value="fairy">fairy</option>
-                            <option value="shadow">shadow</option>
-                        </select>
-                    </label>
-
-                    <label for="sortSelect"> Сортировка
-                        <select id="sortSelect" name="sortSelect">
-                            <option value="name">По имени</option>
-                            <option value="height">По росту</option>
-                            <option value="weight">По весу</option>
-                        </select>
-                    </label>
-
-                    <label for="orderSelect"> Порядок
-                        <select id="orderSelect" name="orderSelect" >
-                            <option value="increase">По возрастанию</option>
-                            <option value="decrease">По убыванию</option>
-                        </select>
-                    </label>
-
-
-                    <label for="inputNumber">На одной странице
-                        <input type="number" id="inputNumber" name="inputNumber" required max="20" min="5" value=10
-                        />
-                    </label>
-                    <button type="submit" id="formBtn">Найти</button>
-                </form>
+                <label for="orderSelect"> Порядок
+                    <select id="orderSelect" name="orderSelect">
+                        <option value="">По умолчанию</option>
+                        <option value="increase">По возрастанию</option>
+                        <option value="decrease">По убыванию</option>
+                    </select>
+                </label>
             </div>
 
             <div id="preloader">
@@ -90,10 +61,11 @@
             </div>
 
             <div class="result-block" id="result-block"></div>
-            <div>
-                <button id="btnPrevious">Previous</button>
+
+            <div class="pag-block">
+                <div id="btnPrevious"></div>
                 <nav id="pagination"></nav>
-                <button id="btnNext">Next</button>
+                <div id="btnNext"></div>
             </div>
         </div>
     </main>

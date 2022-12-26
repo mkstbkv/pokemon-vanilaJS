@@ -3,31 +3,36 @@ document.addEventListener('DOMContentLoaded', () => {
     let pokemons = JSON.parse(localStorage.getItem('pokemons'));
     const resultsBlock = document.getElementById('result-block');
     const loader = document.getElementById('preloader');
+    const url = 'https://pokeapi.co/api/v2/pokemon/';
+    const fetchData = async url => {
+        const response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.log('Что то пошло не так. Ошибка: ' + response.status);
+        }
+    };
 
-    function paintResult (arr) {
+    async function paintResult (arr) {
         for ( i = 0, r = ""; i < arr.length; i++ ) {
+
             let pokemon = null;
             pokemons.forEach(pok => {
                 if (pok.name === arr[i]) {
                     pokemon = pok;
                 }
             });
-            const favoritesPok = JSON.parse(localStorage.getItem('favorites'));
-            if (favoritesPok) {
-                if (favoritesPok.includes(pokemon.name)) {
-                    r += `
-                        <div class="result-card">
-                            <img src="${  pokemon.img ? pokemon.img : `../images/no-image.png`} " alt="${  pokemon.name }"/>
-                            <p>${  pokemon.name }</p>
-                            <p>Рост: ${  pokemon.height }</p>
-                            <p>Вес: ${  pokemon.weight }</p>
-                            <p>Тип: ${ pokemon.types.type_1 }</p>
-                            <button class="btnAddToFavorite ${  pokemon.name }">Удалить из избранного</button>
-                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  pokemon.name }">More info</a>  
-                        </div>
-                    `;
-                }
-            }
+            let pokemonData = await fetchData(url + pokemon.name);
+
+            r += `
+                <div class="result-card fav-card">
+                    <img src="${  pokemonData.sprites.other["official-artwork"].front_default ? pokemonData.sprites.other["official-artwork"].front_default : `../images/no-image.png`} "
+                        alt="${  pokemonData.name }"/>
+                    <p>${  pokemonData.name }</p>
+                    <button class="btnAddToFavorite ${  pokemonData.name }">Удалить из избранного</button>
+                    <a href="../pages/pokemon-info.html" class="pokemon-info ${  pokemonData.name }">More info</a>  
+                </div>
+            `;
         }
         return r;
     }
@@ -36,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const run = async () => {
         if (favorites && favorites.length > 0) {
             loader.style.display = 'block';
-            resultsBlock.innerHTML = paintResult(favorites);
+            resultsBlock.innerHTML = await paintResult(favorites);
             loader.style.display = 'none';
         }
 
@@ -57,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             let favoritesPok = JSON.parse(localStorage.getItem('favorites'));
-            resultsBlock.innerHTML = paintResult(favoritesPok);
+            resultsBlock.innerHTML = await paintResult(favoritesPok);
         });
 
         document.addEventListener('click',function (event){

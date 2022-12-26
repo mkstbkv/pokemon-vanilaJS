@@ -1,15 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     const url = 'https://pokeapi.co/api/v2/pokemon/';
-    const allPokemon = [];
     const resultsBlock = document.getElementById('result-block');
     const paginationBlock = document.getElementById('pagination');
-    const form = document.getElementById('form');
     const inputText = document.getElementById('inputText');
     const inputNumber = document.getElementById('inputNumber');
-    const sortSelect = document.getElementById('sortSelect');
     const orderSelect = document.getElementById('orderSelect');
-    const typeSelect = document.getElementById('typeSelect');
+    const btnNext = document.getElementById('btnNext');
+    const btnPrevious = document.getElementById('btnPrevious');
     const loader = document.getElementById('preloader');
+    const textBtn = document.getElementById('text-field-btn');
+    const numberMinus = document.getElementById('number-minus');
+    const numberPlus = document.getElementById('number-plus');
 
     const fetchData = async url => {
         const response = await fetch(url);
@@ -31,45 +32,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return r;
     }
 
-    function paintResult (arr) {
+    async function paintResult (arr) {
+        const favorites = JSON.parse(localStorage.getItem('favorites'));
         for ( i = 0, r = ""; i < arr.length; i++ ) {
-            const favorites = JSON.parse(localStorage.getItem('favorites'));
+            const pok = await fetchData(url + arr[i].name);
             if (favorites) {
                 if (favorites.includes( arr[i].name) ) {
                     r += `
-                        <div class="result-card">
-                            <img src="${  arr[i].img ? arr[i].img : `../images/no-image.png`} " alt="${  arr[i].name }"/>
-                            <p>${  arr[i].name }</p>
-                            <p>Рост: ${  arr[i].height }</p>
-                            <p>Вес: ${  arr[i].weight }</p>
-                            <p>Тип: ${ arr[i].types.type_1 }</p>
-                            <button class="btnAddToFavorite ${  arr[i].name }">Удалить из избранного</button>
-                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  arr[i].name }">More info</a>  
+                        <div class="result-card fav-card">
+                            <img src="${  pok.sprites.other["official-artwork"].front_default ? pok.sprites.other["official-artwork"].front_default : `../images/no-image.png`} "
+                                alt="${  pok.name }"/>
+                            <p>${  pok.name }</p>
+                            <button class="btnAddToFavorite ${  pok.name }">Удалить из избранного</button>
+                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  pok.name }">More info</a>  
                         </div>
                     `;
                 } else {
                     r += `
                         <div class="result-card">
-                            <img src="${  arr[i].img ? arr[i].img : `../images/no-image.png`} " alt="${  arr[i].name }"/>
+                            <img src="${  pok.sprites.other["official-artwork"].front_default ? pok.sprites.other["official-artwork"].front_default : `../images/no-image.png`} "
+                                alt="${  pok.name }"/>
                             <p>${  arr[i].name }</p>
-                            <p>Рост: ${  arr[i].height }</p>
-                            <p>Вес: ${  arr[i].weight }</p>
-                            <p>Тип: ${ arr[i].types.type_1 }</p>
-                            <button class="btnAddToFavorite ${  arr[i].name }">Добавить в избранное</button>
-                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  arr[i].name }">More info</a>  
+                            <button class="btnAddToFavorite ${  pok.name }">Добавить в избранное</button>
+                            <a href="../pages/pokemon-info.html" class="pokemon-info ${  pok.name }">More info</a>  
                         </div>
                     `;
                 }
             } else {
                 r += `
                     <div class="result-card">
-                            <img src="${  arr[i].img ? arr[i].img : `../images/no-image.png`} " alt="${  arr[i].name }"/>
-                        <p>${  arr[i].name }</p>
-                        <p>Рост: ${  arr[i].height }</p>
-                        <p>Вес: ${  arr[i].weight }</p>
-                        <p>Тип: ${ arr[i].types.type_1 }</p>
-                        <button class="btnAddToFavorite ${  arr[i].name }">Добавить в избранное</button>
-                        <a href="../pages/pokemon-info.html" class="pokemon-info ${  arr[i].name }">More info</a>
+                        <img src="${  pok.sprites.other["official-artwork"].front_default ? pok.sprites.other["official-artwork"].front_default : `../images/no-image.png`} "
+                                alt="${  pok.name }"/>
+                        <p>${  pok.name }</p>
+                        <button class="btnAddToFavorite ${  pok.name }">Добавить в избранное</button>
+                        <a href="../pages/pokemon-info.html" class="pokemon-info ${  pok.name }">More info</a>
                     </div>
                 `;
             }
@@ -77,86 +73,149 @@ document.addEventListener('DOMContentLoaded', () => {
         return r;
     }
 
+    function hideOverPages() {
+        let items = [...paginationBlock.children];
+        if (items.length > 5) {
+            items.forEach((item) => item.classList.add("hide"));
+            items[0].classList.remove("hide");
+            const active = document.querySelector('.active');
+
+            if (active.previousElementSibling) {
+                active.previousElementSibling.classList.remove("hide");
+            }
+            active.classList.remove("hide");
+            if (active.nextElementSibling) {
+                active.nextElementSibling.classList.remove("hide");
+            }
+            items[items.length - 1].classList.remove("hide");
+        }
+    }
+
+    const paginationButton = async (event, pokemons) => {
+        if (event.target.classList[1] === 'hide') {
+            return;
+        }
+        const limitLocal = parseInt(JSON.parse(localStorage.getItem('limit')));
+        let searchPokemons = JSON.parse(localStorage.getItem('searchPokemons'));
+        addClassActive(event.target);
+        const y = event.target.textContent;
+        const start = limitLocal * (y - 1);
+        const end = limitLocal * y;
+        resultsBlock.innerHTML = '';
+        if (!searchPokemons || searchPokemons.length === 0) {
+            loader.style.display = 'block';
+            resultsBlock.innerHTML = (await paintResult(pokemons.slice(start, end)));
+            hideOverPages();
+            loader.style.display = 'none';
+        } else {
+            loader.style.display = 'block';
+            resultsBlock.innerHTML = await paintResult(searchPokemons.slice(start, end));
+            hideOverPages();
+            loader.style.display = 'none';
+        }
+        loader.style.display = 'none';
+        localStorage.setItem('onPaginationPage', event.target.textContent);
+    }
+
     const btnAddToFavorite = event =>{
         let favorites = JSON.parse(localStorage.getItem('favorites'));
-        if (favorites) {
+        if (favorites && favorites.length >= 1) {
             if (!favorites.includes(event.target.classList[1])) {
                 favorites.push(event.target.classList[1]);
                 localStorage.setItem('favorites', JSON.stringify(favorites));
                 event.target.innerText = 'Удалить из избранного';
+                event.path[1].classList.add('fav-card');
+
             } else {
                 favorites.splice(favorites.indexOf(event.target.classList[1]), 1);
                 localStorage.setItem('favorites', JSON.stringify(favorites));
                 event.target.innerText = 'Добавить в избранное';
+                event.path[1].classList.remove('fav-card');
             }
         } else {
             const fav = [];
             fav.push(event.target.classList[1]);
             localStorage.setItem('favorites', JSON.stringify(fav));
             event.target.innerText = 'Удалить из избранного';
+            event.path[1].classList.add('fav-card');
         }
     }
 
-    const paginationButton = (event, pokemons) => {
-        const limitLocal = parseInt(JSON.parse(localStorage.getItem('limit')));
-        let searchPokemons = JSON.parse(localStorage.getItem('searchPokemons'));
+    const orderSort = async () => {
+        let pokemonsOrder = JSON.parse(localStorage.getItem('pokemons'));
+        let searchPokemonsOrder = JSON.parse(localStorage.getItem('searchPokemons'));
 
-        loader.style.display = 'block';
-        addClassActive(event.target);
-        const y = event.target.textContent;
-        const start = limitLocal * (y - 1);
-        const end = limitLocal * y;
-
-        if (!searchPokemons) {
-            resultsBlock.innerHTML = paintResult(pokemons.slice(start, end));
-        } else {
-            resultsBlock.innerHTML = paintResult(searchPokemons.slice(start, end));
+        if (orderSelect.value === '') {
+            if (!searchPokemonsOrder || (searchPokemonsOrder.length === 0)) {
+                await searchPagination(pokemonsOrder);
+            } else {
+                await searchPagination(searchPokemonsOrder);
+            }
+        } else if (orderSelect.value === 'increase') {
+            if (!searchPokemonsOrder || (searchPokemonsOrder.length === 0)) {
+                pokemonsOrder.sort(sortInArr('increase'));
+                await searchPagination(pokemonsOrder);
+            } else {
+                searchPokemonsOrder.sort(sortInArr('increase'));
+                await searchPagination(searchPokemonsOrder);
+            }
+        } else if (orderSelect.value === 'decrease') {
+            if (!searchPokemonsOrder || (searchPokemonsOrder.length === 0)) {
+                pokemonsOrder.sort(sortInArr('decrease'));
+                await searchPagination(pokemonsOrder);
+            } else {
+                searchPokemonsOrder.sort(sortInArr('decrease'));
+                await searchPagination(searchPokemonsOrder);
+            }
         }
-        loader.style.display = 'none';
-        localStorage.setItem('onPaginationPage', JSON.stringify(event.target.textContent));
     }
 
     const addClassActive = ( page ) => {
         const activePage = document.querySelector('.active');
-        activePage.classList.remove('active');
+        if (activePage) {
+            activePage.classList.remove('active');
+        }
         page.classList.add('active');
     }
 
-    const searchPagination = arr => {
-        const onPage = parseInt(JSON.parse(localStorage.getItem('onPaginationPage')));
+    const searchPagination = async arr => {
+        const onPage = parseInt(localStorage.getItem('onPaginationPage'));
         const limitLocal = parseInt(JSON.parse(localStorage.getItem('limit')));
-
+        paginationBlock.innerHTML = "";
+        resultsBlock.innerHTML = "";
         paginationBlock.innerHTML = paintPaginationButton(numberOfButtons(arr, limitLocal));
-        paginationBlock.children[0].classList.add('active');
         if (onPage) {
-            resultsBlock.innerHTML = paintResult(arr.slice((limitLocal * (onPage - 1)), limitLocal * onPage));
+            resultsBlock.innerHTML = await paintResult(arr.slice((limitLocal * (onPage - 1)), limitLocal * onPage));
             const page = document.querySelectorAll('.pagination-button');
             for (let i = 0; i < page.length; i++) {
                 if (page[i].textContent === onPage.toString()) {
                     addClassActive(page[i]);
                 }
             }
+            hideOverPages();
         } else {
-            resultsBlock.innerHTML = paintResult(arr.slice(0, limitLocal));
+            paginationBlock.children[0].classList.add('active');
+            resultsBlock.innerHTML = await paintResult(arr.slice(0, limitLocal));
+            hideOverPages();
         }
     }
 
-    function sortInArr (field, order) {
+    function sortInArr (order) {
         if (order === 'increase') {
-            return (a, b) => a[field] > b[field] ? 1 : -1;
+            return (a, b) => a.name > b.name ? 1 : -1;
         } else if (order === 'decrease') {
-            return (a, b) => a[field] > b[field] ? -1 : 1;
+            return (a, b) => a.name > b.name ? -1 : 1;
         }
         return 0;
     }
 
-    const submit = (arr, input, type, sort, order,) => {
+    const submit = async (arr, input) => {
         paginationBlock.innerHTML = '';
-
+        orderSelect.value = '';
         if (!(input === '')) {
             let pokemonData = [];
             arr.forEach(pokemon => {
-                if ((pokemon.name.includes(input.toLowerCase())) && (type === pokemon.types.type_1)) {
+                if (pokemon.name.includes(input.toLowerCase())) {
                     pokemonData.push(pokemon);
                 }
             });
@@ -166,91 +225,46 @@ document.addEventListener('DOMContentLoaded', () => {
                    <p>Извините, по вашему запросу ничего не найдено. Измените параметры поиска</p>
                `;
             } else {
-                pokemonData.sort(sortInArr(sort, order));
                 localStorage.setItem('searchPokemons', JSON.stringify(pokemonData));
-                searchPagination(pokemonData);
+                await searchPagination(pokemonData);
             }
 
         } else {
             localStorage.setItem('input', '');
-            let pokemonData = [];
-            arr.forEach(pokemon => {
-                if (type === pokemon.types.type_1) {
-                    pokemonData.push(pokemon);
-                }
-            });
-            pokemonData.sort(sortInArr(sort, order));
-            localStorage.setItem('searchPokemons', JSON.stringify(pokemonData));
-            searchPagination(pokemonData);
+            localStorage.setItem('searchPokemons', JSON.stringify(arr));
+            await searchPagination(arr);
         }
     }
 
     const run = async () => {
-        const limit = parseInt(JSON.parse(localStorage.getItem('limit')));
         let pokemons = JSON.parse(localStorage.getItem('pokemons'));
-        let input = localStorage.getItem('input');
-        let sort = localStorage.getItem('sort');
-        let order = localStorage.getItem('order');
-        if (input) {
-            inputText.value = input
-        }
-        if (sort) {
-            sortSelect.value = sort
-        }
-        if (order) {
-            orderSelect.value = order
-        }
-        if (isNaN(limit)) {
-            localStorage.setItem('limit', JSON.stringify(10));
-            inputNumber.value = 10;
+        let limit = parseInt(localStorage.getItem('limit'));
+        if (!limit) {
+            localStorage.setItem('limit', '10');
+        } else {
+            inputNumber.value = limit;
         }
 
         if (!pokemons) {
             loader.style.display = 'block';
             let data = await fetchData(url + '?limit=100000&offset=0');
-            for (let i = 0; i < data.results.length; i++) {
-                const pokemon = await fetchData(url + data.results[i].name);
-                const allType = (arr) => {
-                    if (arr.length === 2) {
-                        return {type_1: arr[0].type.name, type_2: arr[1].type.name}
-                    } else if (arr.length === 1) {
-                        return {type_1: arr[0].type.name}
-                    }
-                }
-                const obj = {
-                    id: pokemon.id,
-                    name: pokemon.name,
-                    height: pokemon.height,
-                    weight: pokemon.weight,
-                    types: allType(pokemon.types),
-                    img: pokemon.sprites.other['official-artwork'].front_default,
-                    stats: {
-                        hp: pokemon.stats[0].base_stat,
-                        attack: pokemon.stats[1].base_stat,
-                        defense: pokemon.stats[2].base_stat,
-                        special_attack: pokemon.stats[3].base_stat,
-                        special_defense: pokemon.stats[4].base_stat,
-                        speed: pokemon.stats[5].base_stat,
-                    }
-                }
-                allPokemon.push(obj);
-            }
-            localStorage.setItem('pokemons', JSON.stringify(allPokemon));
+            localStorage.setItem('pokemons', JSON.stringify(data.results));
         }
 
         pokemons = JSON.parse(localStorage.getItem('pokemons'));
         let searchPokemons = JSON.parse(localStorage.getItem('searchPokemons'));
-        if (!searchPokemons) {
-            searchPagination(pokemons);
-
-        } else {
-            searchPagination(searchPokemons);
-        }
         loader.style.display = 'none';
+
+        if (!searchPokemons || (searchPokemons.length === 0)) {
+           await searchPagination(pokemons);
+        } else {
+           await searchPagination(searchPokemons);
+        }
+
 
         document.addEventListener('click',async function (event){
             if ([...event.target.classList].includes("pagination-button")) {
-                paginationButton(event, pokemons)
+                await paginationButton(event, pokemons);
             }
         });
 
@@ -267,22 +281,108 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            localStorage.setItem('limit', inputNumber.value);
+
+        textBtn.addEventListener('click', async e => {
             localStorage.setItem('onPaginationPage', '1');
-            localStorage.setItem('sort', sortSelect.value);
-            localStorage.setItem('order', orderSelect.value);
-            localStorage.setItem('type', typeSelect.value);
             if (!(inputText.value === '')) {
                 localStorage.setItem('input', inputText.value);
             }
             loader.style.display = 'block';
+            await submit(pokemons, inputText.value);
+            loader.style.display = 'none';
+        });
 
-            submit(pokemons, inputText.value, typeSelect.value, sortSelect.value, orderSelect.value);
+        numberMinus.addEventListener('click', async e => {
+            if (inputNumber.value === 5) {
+                return;
+            }
+            e.target.nextElementSibling.stepDown();
+            localStorage.setItem('limit', inputNumber.value.toString());
+            let minPokemons = JSON.parse(localStorage.getItem('pokemons'));
+            let searchMinPokemons = JSON.parse(localStorage.getItem('searchPokemons'));
+            loader.style.display = 'block';
+
+            if (!searchMinPokemons || (searchMinPokemons.length === 0)) {
+                await searchPagination(minPokemons);
+            } else {
+                await searchPagination(searchMinPokemons);
+            }
+            loader.style.display = 'none';
+        });
+
+        numberPlus.addEventListener('click', async e => {
+            if (inputNumber.value === 20) {
+                e.preventDefault();
+                return;
+            }
+            e.target.previousElementSibling.stepUp();
+            localStorage.setItem('limit', inputNumber.value.toString());
+            let plusPokemons = JSON.parse(localStorage.getItem('pokemons'));
+            let searchPlusPokemons = JSON.parse(localStorage.getItem('searchPokemons'));
+            loader.style.display = 'block';
+
+            if (!searchPlusPokemons || (searchPlusPokemons.length === 0)) {
+                await searchPagination(plusPokemons);
+            } else {
+                await searchPagination(searchPlusPokemons);
+            }
+            loader.style.display = 'none';
+        });
+
+        orderSelect.addEventListener('change', async () => {
+           await orderSort()
+        });
+
+        btnNext.addEventListener('click', async () => {
+            loader.style.display = 'block';
+            resultsBlock.innerHTML = "";
+
+            const activePage = document.querySelector('.active');
+            const nextElement = activePage.nextElementSibling;
+
+            if (!nextElement) {
+                btnNext.setAttribute("disabled", "disabled");
+            } else if (nextElement){
+                if (activePage) {
+                    activePage.classList.remove('active');
+                }
+                localStorage.setItem('onPaginationPage', nextElement.textContent);
+                nextElement.classList.add('active');
+                let searchData = JSON.parse(localStorage.getItem('searchPokemons'));
+                if (!searchData || (searchData.length === 0)) {
+                    await searchPagination(pokemons);
+                } else {
+                    await searchPagination(searchData);
+                }
+            }
+            loader.style.display = 'none';
+        });
+
+        btnPrevious.addEventListener('click', async () => {
+            loader.style.display = 'block';
+            resultsBlock.innerHTML = "";
+            const activePage = document.querySelector('.active');
+
+            const previousElement = activePage.previousElementSibling;
+            if (!previousElement) {
+                btnPrevious.setAttribute("disabled", "disabled");
+            } else if (previousElement) {
+                if (activePage) {
+                    activePage.classList.remove('active');
+                }
+                localStorage.setItem('onPaginationPage', previousElement.textContent);
+                previousElement.classList.add('active');
+                let searchData = JSON.parse(localStorage.getItem('searchPokemons'));
+                if (!searchData || (searchData.length === 0)) {
+                    await searchPagination(pokemons);
+                } else {
+                    await searchPagination(searchData);
+                }
+            }
             loader.style.display = 'none';
         });
     };
 
     run();
 });
+
